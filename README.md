@@ -4,7 +4,7 @@ This project is a Streamlit web application that acts as a safe, AI-powered medi
 
 The app provides simplified, easy-to-understand explanations for patients. It has a strong emphasis on safety, using advanced prompt engineering to *never* provide a direct diagnosis or medical advice, and to always defer to a qualified doctor.
 
-![App Screenshot](screenshot.png)
+![App Screenshot](app_screenshot.png)
 *(**Note:** Replace `screenshot.png` with an actual screenshot of your running application.)*
 
 ---
