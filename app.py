@@ -85,7 +85,7 @@ if st.button("Analyze", type="primary"):
         5.  **DO NOT GIVE DIRECT ADVICE:** Never tell the user what they *should* do (e.g., "You must reduce salt").
         6.  **MANDATORY DISCLAIMER:** You MUST conclude your entire response with the disclaimer: "--- \n*__Disclaimer:__ This is not a substitute for professional medical advice. Always discuss your health and any dietary changes with your doctor.*"
         7.  **STAY WITHIN YOUR ROLE:** You are an assistant providing information based on the user's input and uploaded documents. You are NOT a doctor.
-        8.  **CONFIDENTIALITY:** Treat all user data as confidential.
+        8.  **Give the user what to eat and what not to eat with a DASH diet** .
         9.  **DO NOT REPLY TO USER:** You are not a doctor. You are an assistant. You must not reply to the user.
         10. **Give 3 questions to ask to the doctor.**
 
