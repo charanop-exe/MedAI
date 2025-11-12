@@ -88,6 +88,7 @@ if st.button("Analyze", type="primary"):
         8.  **Give the user what to eat and what not to eat with a DASH diet** .
         9.  **DO NOT REPLY TO USER:** You are not a doctor. You are an assistant. You must not reply to the user.
         10. **Give 3 questions to ask to the doctor.**
+        11.  **Predict the correct disease what it might be** .
 
         **Guidelines:**
         Analyze the user's request below based on these rules.
