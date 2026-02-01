@@ -1,123 +1,130 @@
 # streamlit_app.py
-# V6: FINAL - Includes a safe, educational section on dietary topics.
+# PRODUCTION-SAFE Medical AI (Gemini + Streamlit Cloud)
 
-import os
-import streamlit as st # type: ignore
-import google.generativeai as genai # type: ignore
-from dotenv import load_dotenv # type: ignore
+import streamlit as st
+import google.generativeai as genai
 
-# --- 1. API and Model Configuration ---
+# ---------------------------
+# 1. API CONFIGURATION
+# ---------------------------
 
 try:
-    load_dotenv()
-    api_key = os.getenv("GEMINI_API_KEY")
-
-    if not api_key:
-        st.error("🛑 Gemini API key not found. Please create a .env file and add your key.")
-        st.stop()
-    
+    api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
-
-except Exception as e:
-    st.error(f"An error occurred during API configuration: {e}")
+except KeyError:
+    st.error("🛑 Gemini API key not found. Please add it in Streamlit → Settings → Secrets.")
+    st.stop()
+except Exception:
+    st.error("🛑 Failed to initialize AI service. Please try again later.")
     st.stop()
 
-# --- 2. The Core AI Function ---
+# ---------------------------
+# 2. SAFE GEMINI CALL
+# ---------------------------
 
-def get_gemini_response(full_prompt: str, file_parts: list) -> str:
-    """
-    Uses the Gemini API to get a response based on a full prompt and optional file parts.
-    """
+def get_gemini_response(prompt: str, file_parts: list) -> str:
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        content = [full_prompt] + file_parts
-        response = model.generate_content(content)
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        response = model.generate_content([prompt] + file_parts)
         return response.text
-        
+
     except Exception as e:
-        st.error(f"An error occurred while calling the Gemini API: {e}")
+        # Do NOT expose internal error details to users
+        st.error("⚠️ The AI service could not process your request at the moment.")
         return ""
 
+# ---------------------------
+# 3. STREAMLIT UI
+# ---------------------------
 
-# --- 3. The Streamlit User Interface ---
-
-# Set the page configuration
 st.set_page_config(
     page_title="AI Medical Report Analyzer",
     page_icon="🩺",
     layout="centered"
 )
 
-# Display the main title and a brief description
 st.title("🩺 AI Medical Report Analyzer")
-st.write("Enter your query and optionally upload a medical report for a safe, simplified analysis.")
-
-# --- Text Input Area ---
-user_query = st.text_area(
-    "**Your Question or Instruction:**",
-    height=100,
-    placeholder="e.g., 'Summarize this report for me' or 'My blood pressure is 150/90, what does this mean?'"
+st.write(
+    "This tool provides **educational explanations** of medical reports. "
+    "It does **not** diagnose or replace a healthcare professional."
 )
 
-# --- File Uploader Area (Optional) ---
+user_query = st.text_area(
+    "Your question (optional but recommended):",
+    height=100,
+    placeholder="Example: Explain these blood test values in simple terms."
+)
+
 uploaded_file = st.file_uploader(
-    "**Upload a report for context (Optional):**",
+    "Upload a medical report (optional):",
     type=["pdf", "png", "jpg", "jpeg"]
 )
 
-# Button to trigger the analysis
+# ---------------------------
+# 4. BUTTON ACTION
+# ---------------------------
+
 if st.button("Analyze", type="primary"):
-    if not user_query:
-        st.warning("Please enter your question or instruction in the text box.")
+
+    if not user_query and not uploaded_file:
+        st.warning("Please enter a question or upload a report.")
         st.stop()
 
     with st.spinner("🤖 Analyzing safely..."):
-        
-        # --- THIS IS THE UPDATED, MORE ADVANCED PROMPT ---
+
+        # ---------------------------
+        # SAFE SYSTEM PROMPT (Gemini-Compliant)
+        # ---------------------------
+
         system_prompt = """
-        **Your Role:** You are a highly skilled medical assistant AI. Your task is to analyze the user's question and any provided medical documents. You must provide a simplified, easy-to-understand response for a patient.
+You are a medical information assistant AI.
 
-        **CRITICAL SAFETY RULES - YOU MUST FOLLOW THESE:**
-        1.  **DO NOT DIAGNOSE:** Never state a specific diagnosis like "You have Stage 2 Hypertension." Instead, describe the numbers in a neutral way (e.g., "This reading is in the elevated range.").
-        2.  **DO NOT GIVE DIRECT ADVICE:** Never tell the user what they *should* do (e.g., "You must reduce salt").
-        3.  **ALWAYS DEFER TO A DOCTOR:** Your primary recommended action must always be to "discuss these results with your doctor."
-        4.  **EDUCATE SAFELY (NEW RULE):** If the user's query is about a condition where diet is relevant (like blood pressure or cholesterol), you MAY include a section titled "### Dietary Topics to Discuss with Your Doctor". In this section, provide general, educational information about well-known dietary approaches (like the DASH diet) or nutrients. Frame everything as a topic for a future conversation with their doctor, not as a direct command.
-        5.  **DO NOT GIVE DIRECT ADVICE:** Never tell the user what they *should* do (e.g., "You must reduce salt").
-        6.  **MANDATORY DISCLAIMER:** You MUST conclude your entire response with the disclaimer: "--- \n*__Disclaimer:__ This is not a substitute for professional medical advice. Always discuss your health and any dietary changes with your doctor.*"
-        7.  **STAY WITHIN YOUR ROLE:** You are an assistant providing information based on the user's input and uploaded documents. You are NOT a doctor.
-        8.  **Give the user what to eat and what not to eat with a DASH diet** .
-        9.  **DO NOT REPLY TO USER:** You are not a doctor. You are an assistant. You must not reply to the user.
-        10. **Give 3 questions to ask to the doctor.**
-        11.  **Predict the correct disease what it might be** .
+IMPORTANT RULES (STRICT):
+1. You MUST NOT diagnose diseases.
+2. You MUST NOT predict conditions.
+3. You MUST NOT prescribe treatments or medications.
+4. You MUST NOT give direct medical instructions.
+5. You MAY explain medical terms, lab values, and general concepts in simple language.
+6. You MAY mention widely known educational topics (e.g., DASH diet) ONLY as information to discuss with a doctor.
+7. You MUST encourage consulting a qualified healthcare professional.
+8. Your tone must be neutral, calm, and educational.
+9. You MUST include the disclaimer at the end.
 
-        **Guidelines:**
-        Analyze the user's request below based on these rules.
-        """
+Your task:
+• Explain the provided medical information in plain language.
+• Highlight what the numbers or terms generally represent.
+• Suggest 3 questions the patient can ask their doctor.
 
-        # Combine the safe system prompt with the user's question
-        full_prompt = f"{system_prompt}\n\n**User's Request:** '{user_query}'"
+MANDATORY DISCLAIMER (must be included verbatim at the end):
+---
+Disclaimer: This information is for educational purposes only and is not a substitute for professional medical advice. Always consult a qualified healthcare professional regarding your health.
+"""
+
+        full_prompt = f"""
+{system_prompt}
+
+User question:
+{user_query if user_query else "No specific question provided."}
+"""
 
         file_parts = []
-        if uploaded_file is not None:
-            file_data = uploaded_file.read()
-            file_parts = [
-                {
-                    "mime_type": uploaded_file.type,
-                    "data": file_data
-                }
-            ]
+        if uploaded_file:
+            file_parts.append({
+                "mime_type": uploaded_file.type,
+                "data": uploaded_file.read()
+            })
 
         response = get_gemini_response(full_prompt, file_parts)
 
         if response:
-            st.subheader("AI Analysis")
+            st.subheader("AI Explanation")
             st.markdown(response)
 
+# ---------------------------
+# 5. FOOTER
+# ---------------------------
 
-# python -m venv venv
-# venv\Scripts\activate
-# streamlit
-# google-generativeai
-# python-dotenv
-# pip install -r requirements.txt
-# streamlit run app.py
+st.caption(
+    "⚠️ This app provides educational explanations only. "
+    "Always consult a healthcare professional for medical decisions."
+)
