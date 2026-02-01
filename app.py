@@ -132,10 +132,7 @@
 import streamlit as st
 from google import genai
 
-import sys
-st.write(sys.version)
-
-st.title("Gemini Smoke Test")
+st.write("Python:", __import__("sys").version)
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
@@ -144,5 +141,6 @@ response = client.models.generate_content(
     contents="Say hello in one sentence."
 )
 
+st.success("Gemini response:")
 st.write(response.text)
 
