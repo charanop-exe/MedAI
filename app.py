@@ -129,14 +129,17 @@
 #     "Always consult a healthcare professional for medical decisions."
 # )
 
-
 import streamlit as st
-import google.generativeai as genai
-
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+from google import genai
 
 st.title("Gemini Smoke Test")
 
-model = genai.GenerativeModel("gemini-1.5-flash")
-response = model.generate_content("Say hello in one sentence.")
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+
+response = client.models.generate_content(
+    model="gemini-1.5-flash",
+    contents="Say hello in one sentence."
+)
+
 st.write(response.text)
+
