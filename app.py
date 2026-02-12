@@ -130,11 +130,12 @@
 # )
 
 from google import genai
+import os
 
-client = genai.Client(api_key="PASTE_AI_STUDIO_KEY_HERE")
+client = genai.Client(api_key="AIzaSyC8Olpompi4uRNfsDIPuvi159wEPwM_N3k")
 
 response = client.models.generate_content(
-    model="gemini-1.5-flash",
+    model="models/gemini-1.5-flash",
     contents="Say hello in one sentence."
 )
 
