@@ -1,2 +1,5 @@
+flask
+groq
+python-dotenv
 streamlit
-google-genai
+PyPDF2
